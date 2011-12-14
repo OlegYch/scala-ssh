@@ -25,6 +25,7 @@ class SshClientSpec extends Specification { def is =
 
   "The SshClient should be able to" ^
     "properly connect to the test host and fetch a directory listing"           ! simpleTest^
+    "properly connect to the test host and execute screen"           ! screenTest^
     "properly connect to the test host and execute three independent commands"  ! threeCommandsTest
 
   def getResult[T](ssh: Validated[T]): T = {
@@ -40,6 +41,18 @@ class SshClientSpec extends Specification { def is =
             result.stdOutAsString() + "|" + result.stdErrAsString()
         }
     }) must startWith(".\n..\n")
+  }
+
+  def screenTest = {
+    getResult(SSH(testHostName, new HostConfigProvider {
+      def apply(v1: String) = HostFileConfig()(v1).right.flatMap(c => Right(c.copy(allocatePTY = HostConfig.Cygwin)))
+    }) {
+      client =>
+        client.exec("screen echo ololo").right.map {
+          result =>
+            result.stdOutAsString() + "|" + result.stdErrAsString()
+        }
+    }) must contain("olo")
   }
 
   def threeCommandsTest = {

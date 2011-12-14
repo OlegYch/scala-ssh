@@ -22,6 +22,9 @@ import org.slf4j.LoggerFactory
 import net.schmizz.sshj.userauth.keyprovider.KeyProvider
 import io.Source
 import java.io.{InputStream, FileNotFoundException, FileInputStream, File}
+import java.util.Collections
+import net.schmizz.sshj.connection.channel.direct.PTYMode
+
 
 class SshClient(val config: HostConfig) {
   lazy val log = LoggerFactory.getLogger(getClass)
@@ -106,7 +109,9 @@ class SshClient(val config: HostConfig) {
   protected def startSession(client: SSHClient) = {
     require(client.isConnected && client.isAuthenticated)
     protect("Could not start SSH session on") {
-      client.startSession()
+      val session = client.startSession()
+      config.allocatePTY.foreach{t => session.allocatePTY(t.name, 80, 24, 0, 0, Collections.emptyMap[PTYMode, Integer]())}
+      session
     }
   }
 
