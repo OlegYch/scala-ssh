@@ -27,16 +27,23 @@ class SshClientSpec extends Specification { def is =
     "properly connect to the test host and fetch a directory listing"           ! simpleTest^
     "properly connect to the test host and execute three independent commands"  ! threeCommandsTest
 
+  def getResult[T](ssh: Validated[T]): T = {
+    println(ssh)
+    ssh.right.get
+  }
+
   def simpleTest = {
-    SSH(testHostName) { client =>
-      client.exec("ls -a").right.map { result =>
-        result.stdOutAsString() + "|" + result.stdErrAsString()
-      }
-    }.right.get must startWith(".\n..\n")
+    getResult(SSH(testHostName) {
+      client =>
+        client.exec("ls -a").right.map {
+          result =>
+            result.stdOutAsString() + "|" + result.stdErrAsString()
+        }
+    }) must startWith(".\n..\n")
   }
 
   def threeCommandsTest = {
-    SSH(testHostName) { client =>
+    getResult(SSH(testHostName) { client =>
       client.exec("ls").right.flatMap { res1 =>
         println("OK 1")
         client.exec("dfssgsdg").right.flatMap { res2 =>
@@ -47,7 +54,7 @@ class SshClientSpec extends Specification { def is =
           }
         }
       }
-    }.right.get mustEqual (Some(0), Some(127), Some(0))
+    }) mustEqual (Some(0), Some(127), Some(0))
   }
 
   lazy val testHostName = {
