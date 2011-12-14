@@ -16,7 +16,6 @@
 
 package com.decodified.scalassh
 
-import java.util.concurrent.TimeUnit
 import net.schmizz.sshj.SSHClient
 import org.slf4j.LoggerFactory
 import net.schmizz.sshj.userauth.keyprovider.KeyProvider
@@ -24,6 +23,7 @@ import io.Source
 import java.io.{InputStream, FileNotFoundException, FileInputStream, File}
 import java.util.Collections
 import net.schmizz.sshj.connection.channel.direct.PTYMode
+import net.schmizz.sshj.xfer.scp.SCPFileTransfer
 
 
 class SshClient(val config: HostConfig) {
@@ -44,6 +44,8 @@ class SshClient(val config: HostConfig) {
       }
     }
   }
+
+  def scp: SCPFileTransfer = authenticatedClient.right.map(_.newSCPFileTransfer()).right.get
 
   protected def createClient(config: HostConfig) = {
     make(new SSHClient(config.sshjConfig)) { client =>
