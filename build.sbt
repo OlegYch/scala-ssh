@@ -19,3 +19,5 @@ resolvers ++= Seq(
     "Akka Repository" at "http://akka.io/repository/",
     "Jsch Reposiroty" at "http://jsch.sourceforge.net/maven2/"
 )
+
+publishTo := Some(Resolver.file("file",  new File(System.getProperty("user.home"), ".m2/repository")))
