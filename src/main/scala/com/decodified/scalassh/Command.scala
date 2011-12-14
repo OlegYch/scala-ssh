@@ -2,6 +2,7 @@ package com.decodified.scalassh
 
 import net.schmizz.sshj.connection.channel.direct.Session
 import java.io.{FileInputStream, File, ByteArrayInputStream, InputStream}
+import java.util.concurrent.TimeUnit
 
 case class Command(command: String, input: CommandInput = CommandInput.NoInput, timeout: Option[Int] = None)
 
@@ -21,14 +22,21 @@ object CommandInput {
   def fromResource(resource: String): CommandInput = getClass.getClassLoader.getResourceAsStream(resource)
 }
 
-class CommandResult(val channel: Session.Command) {
+class CommandResult(val channel: Session.Command, val timeout: Option[Int]) {
   def stdErrStream: InputStream = channel.getErrorStream
   def stdOutStream: InputStream = channel.getInputStream
-  lazy val stdErrBytes = new StreamCopier().emptyToByteArray(stdErrStream)
-  lazy val stdOutBytes = new StreamCopier().emptyToByteArray(stdOutStream)
+  lazy val stdErrBytes = new StreamCopier().emptyToByteArray(join.stdErrStream)
+  lazy val stdOutBytes = new StreamCopier().emptyToByteArray(join.stdOutStream)
   def stdErrAsString(charsetname: String = "utf8") = new String(stdErrBytes, charsetname)
   def stdOutAsString(charsetname: String = "utf8") = new String(stdOutBytes, charsetname)
-  lazy val exitSignal: Option[String] = Option(channel.getExitSignal).map(_.toString)
-  lazy val exitCode: Option[Int] = Option(channel.getExitStatus)
-  lazy val exitErrorMessage: Option[String] = Option(channel.getExitErrorMessage)
+  lazy val exitSignal: Option[String] = Option(join.channel.getExitSignal).map(_.toString)
+  lazy val exitCode: Option[Int] = Option(join.channel.getExitStatus)
+  lazy val exitErrorMessage: Option[String] = Option(join.channel.getExitErrorMessage)
+  lazy val join: CommandResult = {
+    (timeout) match {
+      case Some(timeout) => channel.join(timeout, TimeUnit.MILLISECONDS)
+      case None => channel.join()
+    }
+    this
+  }
 }

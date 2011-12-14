@@ -20,11 +20,7 @@ class SshClient(val config: HostConfig) {
         protect("Could not execute SSH command on") {
           val channel = session.exec(command.command)
           command.input.inputStream.foreach(new StreamCopier().copy(_, channel.getOutputStream))
-          (command.timeout orElse config.commandTimeout) match {
-            case Some(timeout) => channel.join(timeout, TimeUnit.MILLISECONDS)
-            case None => channel.join()
-          }
-          new CommandResult(channel)
+          new CommandResult(channel, command.timeout orElse config.commandTimeout)
         }
       }
     }
