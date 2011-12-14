@@ -6,10 +6,15 @@ object SSH {
     SshClient(host, configProvider).right.flatMap { client =>
       val result = {
         try { body(client).result }
-        catch { case e: Exception => Left(e.toString) }
+        catch { case e: Exception => client.log.error("Exception",e); Left(e.toString) }
       }
-      client.close()
-      result
+      try {
+        client.close()
+        result
+      }
+      catch {
+        case e => client.log.error("Exception",e); Left("Exception on close" + result.toString)
+      }
     }
   }
 
