@@ -27,13 +27,17 @@ case class HostConfig(
   connectionTimeout: Option[Int] = None,
   commandTimeout: Option[Int] = None,
   enableCompression: Boolean = false,
+  allocatePTY: Option[PTY] = None,
   hostKeyVerifier: HostKeyVerifier = KnownHosts.right.toOption.getOrElse(DontVerify),
   sshjConfig: Config = HostConfig.DefaultSshjConfig
 )
 
 object HostConfig {
   lazy val DefaultSshjConfig = new DefaultConfig
+  val Cygwin = Some(PTY("cygwin"))
 }
+
+case class PTY(name:String)
 
 abstract class FromStringsHostConfigProvider extends HostConfigProvider {
   def rawLines(host: String): Validated[(String, TraversableOnce[String])]
@@ -112,7 +116,7 @@ abstract class FromStringsHostConfigProvider extends HostConfigProvider {
   private def optBoolSetting(key: String, settings: Map[String, String], source: String) = {
     setting(key, settings, source) match {
       case Right("yes" | "YES" | "true" | "TRUE") => Right(Some(true))
-      case Right(value) => Left("Value '%s' for setting '%s' in host config '%s' is not a legal integer".format(value, key, source))
+      case Right(value) => Left("Value '%s' for setting '%s' in host config '%s' is not a legal boolean".format(value, key, source))
       case Left(_) => Right(None)
     }
   }
