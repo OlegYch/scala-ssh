@@ -19,6 +19,7 @@ package com.decodified.scalassh
 import net.schmizz.sshj.SSHClient
 import org.slf4j.LoggerFactory
 import net.schmizz.sshj.userauth.keyprovider.KeyProvider
+import net.schmizz.sshj.userauth.keyprovider.KeyProvider
 import io.Source
 import java.io.{InputStream, FileNotFoundException, FileInputStream, File}
 import java.util.Collections
